@@ -9,8 +9,9 @@ Rules for html: this script assumes that there is unorderd list 'ul' that has ch
 
 Example in pug:
 
-ul(data-subtly) 
-    li 
+<pre>
+ul(data-subtly)
+    li
         a smth1
     li
         a smth2
@@ -20,3 +21,9 @@ ul(data-subtly)
                 ul
                     li
                         a smth2-in-smth2
+</pre>
+
+
+
+TO DO:
+- [ ] Code refactoring
