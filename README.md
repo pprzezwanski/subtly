@@ -17,10 +17,12 @@ ul(data-subtly)
         a smth2
         ul
             li 
-                a smth1-in-smth2
+                a smth3-in-smth2
                 ul
                     li
-                        a smth2-in-smth2
+                        a smth5-in-smth3-in-smth2
+            li
+                a smth4-in-smth2
 </pre>
 
 
