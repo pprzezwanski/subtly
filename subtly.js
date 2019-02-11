@@ -88,7 +88,7 @@ export default options => {
             if (e.target === itemLink) { 
                 e.preventDefault();
 				subnav(item).toggleOpen();
-            } else if (e.target === itemSubNav) subNavigation(e);
+            }
         });
 
         const subNavItemsWithSub = findItemsWithSubnav(Array.from(itemSubNav.children));
