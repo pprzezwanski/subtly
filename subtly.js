@@ -1,10 +1,18 @@
-const subtly = (() => {
+export default options => {
     const config = { // no dots in class names
         mainNav: '[data-subtly]', // class name for main list element
         hasSubNav: 'has-sub', // class name for styling when list element has sub list
-        isOpened: 'is-opened' // class name for styling when list is opened
-    };
+		isOpened: 'is-opened', // class name for styling when list is opened
+		autoClose: true // opened sub-navigation will close when it's sibling sub-navigation will be opened
+	};
 
+	if (options) {
+		if (options.mainNav) config.mainNav = options.mainNav;
+		if (options.hasSubNav) config.hasSubNav = options.hasSubNav;
+		if (options.isOpened) config.isOpened = options.isOpened;
+		if (options.autoClose) config.autoClose = options.autoClose;
+	}
+	
     const restyleParentNavs = (nav, action, navHeight) => {
         const parentNav = nav.parentNode.parentNode;
         if (parentNav.nodeName === 'UL' && !parentNav.classList.contains(config.mainNav)) {
@@ -12,38 +20,48 @@ const subtly = (() => {
             else parentNav.style.height = parentNav.scrollHeight - navHeight + 'px';
             restyleParentNavs(parentNav, action, navHeight);
         }
-    };
-    
-    const subnav = {
-        close (el, sub, trigger) {
-            el.classList.remove(config.isOpened);
-            sub.style.height = '0';
-            if (trigger) trigger.innerHTML = trigger.innerText;
-            restyleParentNavs(sub, 'substract', sub.scrollHeight);
-        },
-        open (el, sub, trigger) {
-            sub.style.height = sub.scrollHeight + 'px';
-            if (trigger) {
-                const triggerHref = trigger.getAttribute('href');
-                trigger.innerHTML = '<a href="' + triggerHref + '">' + trigger.innerText + '</a>';
-            }
-            setTimeout(() => { el.classList.add(config.isOpened); }, 100);
-            restyleParentNavs(sub, 'add', sub.scrollHeight);
-        }, toggleOpen (el, sub, trigger) {
-            if (sub.offsetHeight === 0) subnav.open(el, sub, trigger);
-            else subnav.close(el, sub, trigger);
-        }
+	};
+	
+    const subnav = el => {
+		const trigger = el.children[0];
+		const sub = el.children[1];
+		const subHeight = sub.scrollHeight;
 
-    };
+		const closeNav = (el, sub, trigger) => {
+			el.classList.remove(config.isOpened);
+			sub.style.height = '0';
+			if (trigger) trigger.innerHTML = trigger.innerText;
+		};
 
-    const subNavigation = (el, e) => {
-        const elSubNav = el.nextSibling;
-        const elLink = el.children[0];
-        if (elSubNav) {
-            elSubNav.style.height = '0'; 
-            e.preventDefault();
-            subnav.toggleOpen(el, elSubNav, elLink);
-        }
+		return {
+			close () {
+				closeNav(el, sub, trigger);
+				restyleParentNavs(sub, 'substract', subHeight);
+				return this;
+			},
+			open () {
+				let heightCorrection = 0;
+				if (config.autoClose) {
+					const opened = Array.from(el.parentNode.children).find(c => c.classList.contains(config.isOpened));
+					if (opened) {
+						heightCorrection = opened.scrollHeight - el.offsetHeight;
+						closeNav(opened, opened.children[1], opened.children[0]);
+					}
+				}
+				sub.style.height = subHeight + 'px';
+				if (trigger) {
+					const triggerHref = trigger.getAttribute('href');
+					trigger.innerHTML = '<a href="' + triggerHref + '">' + trigger.innerText + '</a>';
+				}
+				setTimeout(() => { el.classList.add(config.isOpened); }, 100);
+				restyleParentNavs(sub, 'add', subHeight - heightCorrection);
+				return this;
+			}, toggleOpen () {
+				if (sub.offsetHeight === 0) this.open();
+				else this.close();
+				return this;
+			}
+		};
     };
 
     const addClassToSubNavItemsWithSub = item => {
@@ -56,7 +74,6 @@ const subtly = (() => {
         .filter(s => Array.from(s.children).find(c => c.nodeName === 'UL'));
 
     const setItemListener = item => {
-        // const itemSubNav = Array.from(item.children).find(c => c.nodeName === 'UL');
         const itemSubNav = item.children[1];
         
         item.classList.add(config.hasSubNav);
@@ -70,12 +87,8 @@ const subtly = (() => {
             // if we click the link el (first child) in current nav item
             if (e.target === itemLink) { 
                 e.preventDefault();
-                // console.log('toggle open in listener if target =', itemLink);
-                subnav.toggleOpen(item, itemSubNav, itemLink);
-            } else if (e.target === itemSubNav) {
-                // console.log('subnavigation for', item);
-                subNavigation(e.target, itemSubNav, itemLink, e );
-            }
+				subnav(item).toggleOpen();
+            } else if (e.target === itemSubNav) subNavigation(e);
         });
 
         const subNavItemsWithSub = findItemsWithSubnav(Array.from(itemSubNav.children));
@@ -88,11 +101,8 @@ const subtly = (() => {
     document.addEventListener("DOMContentLoaded", () => {
         Array.from(document.querySelectorAll(config.mainNav + ' > li ul'))
             .forEach(u => { u.style.height = '0'; });
-
         const navItems = Array.from(document.querySelectorAll(config.mainNav + ' > li'));
-    
         const itemsWithSub = findItemsWithSubnav(navItems);
-    
-        itemsWithSub.forEach(item => { setItemListener(item); });
+		itemsWithSub.forEach(item => { setItemListener(item); });
     });
-})();
+};
