@@ -43,7 +43,7 @@ export default options => {
 				let heightCorrection = 0;
 				if (config.autoClose) {
 					const opened = Array.from(el.parentNode.children).find(c => c.classList.contains(config.isOpened));
-					if (opened) {
+					if (el.classList.contains(config.hasSubNav) && opened) {
 						heightCorrection = opened.scrollHeight - el.offsetHeight;
 						closeNav(opened, opened.children[1], opened.children[0]);
 					}
