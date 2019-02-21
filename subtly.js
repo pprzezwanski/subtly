@@ -113,10 +113,10 @@ class Subtly {
 
     close () {
         console.log('subtly close');
-        const main = document.querySelector(`${this.config.mainNav}`);
-        const allUls = document.querySelectorAll(`${this.config.mainNav} ul`);
-        allUls.forEach(u => u.style.height = '0');
-        if (main) main.style.height = 'auto';
+        if (!this.mainUl) this.mainUl = document.querySelector(`${this.config.mainNav}`);
+        if (!this.childrenUls) this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
+        this.childrenUls.forEach(u => u.style.height = '0');
+        if (this.mainUl) this.mainUl.style.height = 'auto';
     }
 
     init () {
