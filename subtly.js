@@ -124,7 +124,10 @@ class Subtly {
     close () {
         console.log('subtly close');
         this.childrenUls.forEach(u => u.style.height = '0');
-        if (this.mainUl) this.mainUl.style.height = 'auto';
+        if (this.mainUl) {
+            this.mainUl.style.height = 'auto';
+            Array.from(this.mainUl.children).forEach(c => c.classList.remove('is-opened'))
+        }
     }
 
     init () {
