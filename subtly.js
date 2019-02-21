@@ -1,4 +1,5 @@
 /* eslint-disable */
+
 class Subtly {
     constructor(options) {
         this.config = { // no dots in class names
@@ -48,6 +49,7 @@ class Subtly {
                 return this;
             },
             open() {
+                console.log('this.open')
                 let heightCorrection = 0;
                 if (subtly.config.autoClose) {
                     const opened = Array.from(el.parentNode.children).find(c => c.classList.contains(subtly.config.isOpened));
@@ -63,6 +65,14 @@ class Subtly {
                 }
                 setTimeout(() => { el.classList.add(subtly.config.isOpened); }, 100);
                 subtly.restyleParentNavs(sub, 'add', subHeight - heightCorrection);
+               
+                setTimeout(() => {
+                    const desiredHeight = Array.from(subtly.mainUl.children).reduce((a,c) => a + c.offsetHeight, 0)
+                    if (subtly.mainUl && (subtly.mainUl.offsetHeight < desiredHeight)) {
+                        subtly.mainUl.style.height = subtly.mainUl.scrollHeight + 'px'
+                    }
+                }, 300)
+                
                 return this;
             },
             toggleOpen() {
@@ -113,8 +123,6 @@ class Subtly {
 
     close () {
         console.log('subtly close');
-        if (!this.mainUl) this.mainUl = document.querySelector(`${this.config.mainNav}`);
-        if (!this.childrenUls) this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
         this.childrenUls.forEach(u => u.style.height = '0');
         if (this.mainUl) this.mainUl.style.height = 'auto';
     }
