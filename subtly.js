@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable max-len, no-return-assign */
 
 class Subtly {
     constructor(options) {
@@ -9,70 +9,52 @@ class Subtly {
             autoClose: options ? options.autoClose : true, // opened sub-navigation will close when it's sibling sub-navigation will be opened
         };
         this.initialized = false;
-        this.mainUl;
-        this.childrenUls;
+        this.mainUl = null;
+        this.childrenUls = null;
+        this.mainLiWidthSub = null;
+        this.liContainingUl = [];
+        this.onItemTouch = this.onItemTouch.bind(this);
     }
 
-    restyleParentNavs (nav, action, navHeight) {
+    restyleParentNavs(nav, action, navHeight) {
         const parentNav = nav.parentNode.parentNode;
-        if (parentNav.nodeName === 'UL' && !parentNav.classList.contains(this.config.mainNav)) {
-            // const parentNavLi = Array.from(parentNav.children).find(c => c.nodeName === 'LI');
-            // const parentNavLiPadding = parentNavLi.offsetHeight - parentNavLi.children[0].offsetHeight
-            // console.log(parentNavLi)
-            // console.log(parentNavLiPadding)
-            // console.log(parentNav.offsetHeight)
-            // console.log(parentNav.scrollHeight)
-            // const parentNavHeight = Math.max(parentNav.offsetHeight, parentNav.scrollHeight)
-            // console.log(navHeight)
-            if (action === 'add') parentNav.style.height = `${parentNav.scrollHeight + navHeight}px`;
-            else parentNav.style.height = `${parentNav.scrollHeight - navHeight}px`;
+        if (parentNav.nodeName === 'UL') {
+            if (action === 'add') parentNav.style.maxHeight = `${parentNav.scrollHeight + navHeight}px`;
+            else parentNav.style.maxHeight = `${parentNav.scrollHeight - navHeight}px`;
             this.restyleParentNavs(parentNav, action, navHeight);
         }
-    };
+    }
 
-    subnav (el) {
-        const subtly = this;
-        const trigger = el.children[0];
-        const sub = Array.from(el.children).find((c) => c.nodeName === 'UL');
-        const subHeight = sub.scrollHeight;
+    subnav(el) {
+        const that = this;
+        const trigger = Subtly.findChildFirstA(el);
+        const sub = Subtly.findChildUl(el);
+        if (!sub) return false;
 
-        const closeNav = (el, sub, trigger) => {
-            el.classList.remove(subtly.config.isOpened);
-            sub.style.height = '0';
-            if (trigger) trigger.innerHTML = trigger.innerText;
+        const closeNav = (elem, subnav, trig) => {
+            elem.classList.remove(that.config.isOpened);
+            subnav.style.maxHeight = '0';
+            if (trig) trig.innerHTML = trig.innerText.toLowerCase();
         };
 
         return {
             close() {
                 closeNav(el, sub, trigger);
-                subtly.restyleParentNavs(sub, 'substract', subHeight);
+                that.restyleParentNavs(sub, 'substract', sub.scrollHeight);
                 return this;
             },
             open() {
-                console.log('this.open')
+                const opened = that.config.autoClose && that.findOpenedSibling(el);
                 let heightCorrection = 0;
-                if (subtly.config.autoClose) {
-                    const opened = Array.from(el.parentNode.children).find(c => c.classList.contains(subtly.config.isOpened));
-                    if (el.classList.contains(subtly.config.hasSubNav) && opened) {
-                        heightCorrection = opened.scrollHeight - el.offsetHeight;
-                        closeNav(opened, opened.children[2], opened.children[0]);
-                    }
-                }
-                sub.style.height = `${subHeight}px`;
                 if (trigger) {
                     const triggerHref = trigger.getAttribute('href');
                     trigger.innerHTML = `<a href="${triggerHref}">${trigger.innerText}</a>`;
                 }
-                setTimeout(() => { el.classList.add(subtly.config.isOpened); }, 100);
-                subtly.restyleParentNavs(sub, 'add', subHeight - heightCorrection);
-               
-                setTimeout(() => {
-                    const desiredHeight = Array.from(subtly.mainUl.children).reduce((a,c) => a + c.offsetHeight, 0)
-                    if (subtly.mainUl && (subtly.mainUl.offsetHeight < desiredHeight)) {
-                        subtly.mainUl.style.height = subtly.mainUl.scrollHeight + 'px'
-                    }
-                }, 300)
-                
+                sub.style.maxHeight = `${sub.scrollHeight}px`;
+                el.classList.add(that.config.isOpened);
+                if (opened) heightCorrection = opened.scrollHeight - el.scrollHeight;
+                that.restyleParentNavs(sub, 'add', sub.scrollHeight - heightCorrection);
+                if (opened) closeNav(opened, Subtly.findChildUl(opened), Subtly.findChildFirstA(opened));
                 return this;
             },
             toggleOpen() {
@@ -83,64 +65,76 @@ class Subtly {
         };
     }
 
-    addClassToSubNavItemsWithSub (item) {
-        Array.from(item.children[1].children)
-            .filter(c => c.children.length === 2)
+    addClassToLiWithSub(li) {
+        Array.from(Subtly.findChildUl(li).children)
+            .filter(c => Subtly.findChildUl(c))
             .forEach((c) => { c.classList.add(this.config.hasSubNav); });
     }
 
-    findItemsWithSubnav (elementsArr) {
+    static findItemsWithSubnav(elementsArr) {
         return elementsArr
             .filter(s => Array.from(s.children)
-                .find(c => c.nodeName === 'UL')
-            );
+                .find(c => c.nodeName === 'UL'));
     }
 
-    setItemListener (item) {
-        const itemSubNav = item.children[1];
-
-        item.classList.add(this.config.hasSubNav);
-        this.addClassToSubNavItemsWithSub(item);
-
-        item.addEventListener('touchstart', (e) => {
-            const itemLink = item.children[0];
-            const itemLinkChildLink = itemLink.children[0];
-            // if we click in the main link of current nav item
-            if (e.target === itemLinkChildLink) return;
-            // if we click the link el (first child) in current nav item
-            if (e.target === itemLink) {
-                e.preventDefault();
-                this.subnav(item).toggleOpen();
-            }
-        });
-
-        const subNavItemsWithSub = this.findItemsWithSubnav(Array.from(itemSubNav.children));
-        subNavItemsWithSub.forEach((i) => {
-            this.addClassToSubNavItemsWithSub(i);
-            this.setItemListener(i);
-        });
+    static findChildUl(li) {
+        return Array.from(li.children).find(c => c.nodeName === 'UL');
     }
 
-    close () {
-        console.log('subtly close');
-        this.childrenUls.forEach(u => u.style.height = '0');
-        if (this.mainUl) {
-            this.mainUl.style.height = 'auto';
-            Array.from(this.mainUl.children).forEach(c => c.classList.remove('is-opened'))
+    static findChildFirstA(li) {
+        return Array.from(li.children).find(c => c.nodeName === 'A');
+    }
+
+    findOpenedSibling(li) {
+        return Array.from(li.parentNode.children)
+            .find(c => c.classList.contains(this.config.isOpened));
+    }
+
+    onItemTouch(event) {
+        const itemLink = Subtly.findChildFirstA(event.currentTarget);
+        // if we click the link el (first child) in current nav item
+        // which means we don't click on the child link of this link
+        // and it has bubbled up one level
+        if (event.target === itemLink) {
+            event.preventDefault();
+            this.subnav(event.currentTarget).toggleOpen();
+            return true;
         }
+        return false;
     }
 
-    init () {
-        console.log('subtly init')
+    fillArrayOfLiElementsContainingUl() {
+        const allLi = Array.from(document.querySelectorAll(`${this.config.mainNav} li`));
+        this.liContainingUl = Subtly.findItemsWithSubnav(allLi);
+    }
+
+    off() {
+        this.liContainingUl.forEach((l) => {
+            if (l.classList.contains(this.config.isOpened)) this.subnav(l).close();
+        });
+        this.liContainingUl.forEach(l => l.removeEventListener('touchstart', this.onItemTouch));
+        this.childrenUls.forEach(u => u.style.maxHeight = '9999px');
+        this.mainUl.style.maxHeight = '9999px';
+    }
+
+    on() {
+        this.liContainingUl.forEach(l => l.addEventListener('touchstart', this.onItemTouch));
+        this.childrenUls.forEach(u => u.style.maxHeight = '0');
+    }
+
+    init() {
         this.mainUl = document.querySelector(`${this.config.mainNav}`);
         this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
-        this.close();
+        this.childrenUls.forEach(u => u.style.maxHeight = '0');
         const navItems = Array.from(document.querySelectorAll(`${this.config.mainNav} > li`));
-        const itemsWithSub = this.findItemsWithSubnav(navItems);
-        itemsWithSub.forEach((item) => { this.setItemListener(item); });
+        this.mainLiWidthSub = Subtly.findItemsWithSubnav(navItems);
+        this.fillArrayOfLiElementsContainingUl();
+        this.liContainingUl.forEach((l) => {
+            l.classList.add(this.config.hasSubNav);
+            l.addEventListener('touchstart', this.onItemTouch);
+        });
         this.initialized = true;
-
     }
-};
+}
 
 export default Subtly;
