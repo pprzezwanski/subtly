@@ -1,5 +1,4 @@
 /* eslint-disable max-len, no-return-assign */
-
 class Subtly {
     constructor(options) {
         this.config = { // no dots in class names
@@ -11,9 +10,12 @@ class Subtly {
         this.initialized = false;
         this.mainUl = null;
         this.childrenUls = null;
-        this.mainLiWidthSub = null;
         this.liContainingUl = [];
         this.onItemTouch = this.onItemTouch.bind(this);
+        this.onWindowChange = this.onWindowChange.bind(this);
+        this.previousWindowWidth = null;
+        this.windowChanged = false;
+        this.init();
     }
 
     restyleParentNavs(nav, action, navHeight) {
@@ -85,6 +87,13 @@ class Subtly {
         return Array.from(li.children).find(c => c.nodeName === 'A');
     }
 
+    static getWindowWidth() {
+        return window.innerWidth
+            || document.documentElement.clientWidth
+            || document.body.clientWidth
+            || 0;
+    }
+
     findOpenedSibling(li) {
         return Array.from(li.parentNode.children)
             .find(c => c.classList.contains(this.config.isOpened));
@@ -103,36 +112,56 @@ class Subtly {
         return false;
     }
 
+    onWindowChange() {
+        setTimeout(() => {
+            if (this.windowChanged === true) return false;
+            const windowWidth = Subtly.getWindowWidth();
+            if (windowWidth > 1022 && this.previousWindowWidth <= 1022) this.off();
+            if (windowWidth <= 1022 && (this.previousWindowWidth > 1022 || !this.windowWidth)) {
+                if (!this.initialized) this.initialize();
+                else this.on();
+            }
+            this.previousWindowWidth = windowWidth;
+            this.windowChanged = true;
+            setTimeout(() => { this.windowChanged = false; }, 100);
+            return true;
+        }, 100);
+    }
+
     fillArrayOfLiElementsContainingUl() {
         const allLi = Array.from(document.querySelectorAll(`${this.config.mainNav} li`));
         this.liContainingUl = Subtly.findItemsWithSubnav(allLi);
     }
 
-    off() {
-        this.liContainingUl.forEach((l) => {
-            if (l.classList.contains(this.config.isOpened)) this.subnav(l).close();
-        });
-        this.liContainingUl.forEach(l => l.removeEventListener('touchstart', this.onItemTouch));
-        this.childrenUls.forEach(u => u.style.maxHeight = '9999px');
-        this.mainUl.style.maxHeight = '9999px';
-    }
-
     on() {
-        this.liContainingUl.forEach(l => l.addEventListener('touchstart', this.onItemTouch));
         this.childrenUls.forEach(u => u.style.maxHeight = '0');
-    }
-
-    init() {
-        this.mainUl = document.querySelector(`${this.config.mainNav}`);
-        this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
-        this.childrenUls.forEach(u => u.style.maxHeight = '0');
-        const navItems = Array.from(document.querySelectorAll(`${this.config.mainNav} > li`));
-        this.mainLiWidthSub = Subtly.findItemsWithSubnav(navItems);
-        this.fillArrayOfLiElementsContainingUl();
         this.liContainingUl.forEach((l) => {
             l.classList.add(this.config.hasSubNav);
             l.addEventListener('touchstart', this.onItemTouch);
         });
+    }
+
+    off() {
+        this.liContainingUl.forEach((l) => {
+            l.classList.remove(this.config.hasSubNav);
+            l.removeEventListener('touchstart', this.onItemTouch);
+            if (l.classList.contains(this.config.isOpened)) this.subnav(l).close();
+        });
+        this.childrenUls.forEach(u => u.style.maxHeight = '9999px');
+        this.mainUl.style.maxHeight = '9999px';
+    }
+
+    init() {
+        if (Subtly.getWindowWidth() < 1022) this.initialize();
+        window.addEventListener('resize', this.onWindowChange, false);
+        window.addEventListener('orientationchange', this.onWindowChange, false);
+    }
+
+    initialize() {
+        this.mainUl = document.querySelector(`${this.config.mainNav}`);
+        this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
+        this.fillArrayOfLiElementsContainingUl();
+        this.on();
         this.initialized = true;
     }
 }
