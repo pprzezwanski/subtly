@@ -1,4 +1,5 @@
 /* eslint-disable max-len, no-return-assign */
+
 class Subtly {
     constructor(options) {
         this.config = { // no dots in class names
@@ -15,6 +16,11 @@ class Subtly {
         this.onWindowChange = this.onWindowChange.bind(this);
         this.previousWindowWidth = null;
         this.windowChanged = false;
+
+        // for desktop touch
+        this.prevented = true;
+
+
         this.init();
     }
 
@@ -112,6 +118,10 @@ class Subtly {
         return false;
     }
 
+    // onItemTouchDekstop(event) {
+
+    // }
+
     onWindowChange() {
         setTimeout(() => {
             if (this.windowChanged === true) return false;
@@ -139,6 +149,7 @@ class Subtly {
             l.classList.add(this.config.hasSubNav);
             l.addEventListener('touchstart', this.onItemTouch);
         });
+        this.initialized = true;
     }
 
     off() {
@@ -152,17 +163,58 @@ class Subtly {
     }
 
     init() {
-        if (Subtly.getWindowWidth() < 1022) this.initialize();
+        this.mainUl = document.querySelector(`${this.config.mainNav}`);
+        this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
+        this.fillArrayOfLiElementsContainingUl();
+        if (Subtly.getWindowWidth() < 1022) this.on();
+        this.desktopTouch();
         window.addEventListener('resize', this.onWindowChange, false);
         window.addEventListener('orientationchange', this.onWindowChange, false);
     }
 
     initialize() {
-        this.mainUl = document.querySelector(`${this.config.mainNav}`);
-        this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
-        this.fillArrayOfLiElementsContainingUl();
         this.on();
         this.initialized = true;
+    }
+
+    // large screens touch behaviour
+
+    onOutsideNavTouch(event) {
+        if (!Array.from(document.querySelectorAll('li'))
+            .find(li => Array.from(li.children)
+                .filter(c => c.nodeName === 'A')
+                .find(a => a === event.target))
+        ) {
+            this.prevented = true;
+            const touched = document.querySelector('li.is-touched');
+            if (touched) touched.classList.remove('is-touched');
+        }
+    }
+
+    desktopTouch() {
+        let prevented = true;
+        let previous;
+
+        this.liContainingUl.forEach((li) => {
+            li.addEventListener('touchstart', (e) => {
+                if (previous && li !== previous) {
+                    prevented = true;
+                    previous.classList.remove('is-touched');
+                }
+                if (prevented) {
+                    e.preventDefault();
+                    li.classList.add('is-touched');
+                    prevented = false;
+                } else {
+                    prevented = true;
+                }
+                previous = li;
+            });
+        });
+
+        // close subavs if clicked anywhere outside of nav
+        document.querySelector('body')
+            .addEventListener('touchstart', this.onOutsideNavTouch);
     }
 }
 
