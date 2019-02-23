@@ -14,11 +14,14 @@ class Subtly {
         this.liContainingUl = [];
         this.onItemTouch = this.onItemTouch.bind(this);
         this.onWindowChange = this.onWindowChange.bind(this);
+        this.onOutsideNavTouch = this.onOutsideNavTouch.bind(this);
+        this.onItemTouchDekstop = this.onItemTouchDekstop.bind(this);
         this.previousWindowWidth = null;
         this.windowChanged = false;
 
         // for desktop touch
         this.prevented = true;
+        this.previous = null;
 
 
         this.init();
@@ -118,10 +121,6 @@ class Subtly {
         return false;
     }
 
-    // onItemTouchDekstop(event) {
-
-    // }
-
     onWindowChange() {
         setTimeout(() => {
             if (this.windowChanged === true) return false;
@@ -167,7 +166,7 @@ class Subtly {
         this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
         this.fillArrayOfLiElementsContainingUl();
         if (Subtly.getWindowWidth() < 1022) this.on();
-        this.desktopTouch();
+        this.desktopTouchOn();
         window.addEventListener('resize', this.onWindowChange, false);
         window.addEventListener('orientationchange', this.onWindowChange, false);
     }
@@ -191,30 +190,39 @@ class Subtly {
         }
     }
 
-    desktopTouch() {
-        let prevented = true;
-        let previous;
+    onItemTouchDekstop(event) {
+        if (this.previous && event.currentTarget !== this.previous) {
+            this.prevented = true;
+            this.previous.classList.remove('is-touched');
+        }
+        if (this.prevented) {
+            event.preventDefault();
+            event.currentTarget.classList.add('is-touched');
+            this.prevented = false;
+        } else {
+            this.prevented = true;
+        }
+        this.previous = event.currentTarget;
+    }
 
+    desktopTouchOn() {
         this.liContainingUl.forEach((li) => {
-            li.addEventListener('touchstart', (e) => {
-                if (previous && li !== previous) {
-                    prevented = true;
-                    previous.classList.remove('is-touched');
-                }
-                if (prevented) {
-                    e.preventDefault();
-                    li.classList.add('is-touched');
-                    prevented = false;
-                } else {
-                    prevented = true;
-                }
-                previous = li;
-            });
+            li.addEventListener('touchstart', this.onItemTouchDekstop);
         });
 
         // close subavs if clicked anywhere outside of nav
         document.querySelector('body')
             .addEventListener('touchstart', this.onOutsideNavTouch);
+    }
+
+    desktopTouchOff() {
+        this.liContainingUl.forEach((li) => {
+            li.removeEventListener('touchstart', this.onItemTouchDekstop);
+        });
+
+        // close subavs if clicked anywhere outside of nav
+        document.querySelector('body')
+            .removeEventListener('touchstart', this.onOutsideNavTouch);
     }
 }
 
