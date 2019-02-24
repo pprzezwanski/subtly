@@ -1,5 +1,16 @@
 /* eslint-disable max-len, no-return-assign */
 
+/*!
+ * Subtly.js v1.1.0
+ * (c) 2019 Paweł Przezwański <pprzezwanski@gmail.com>
+ * Released under the MIT License.
+ * Repository: https://github.com/pprzezwanski/subtly.js/
+ */
+
+/**
+ * Complete self-controlling solution for mobile version of navigation based on unordered lists that can have as much levels of sub-navigation as needed. Subtly will automatically self-disable and relaunch when the screen size changes besed on the breakpoint set in options. It also sets touch behaviour for desktop version of navigation (when mobile nav is disabled)
+ * @param {object} options - object with options (more on https://github.com/pprzezwanski/subtly.js/)
+ */
 class Subtly {
     constructor(options) {
         this.config = { // no dots in class names
@@ -7,6 +18,7 @@ class Subtly {
             hasSubNav: options ? options.hasSubNav : 'has-sub', // class name for styling when list element has sub list
             isOpened: options ? options.isOpened : 'is-opened', // class name for styling when list is opened
             autoClose: options ? options.autoClose : true, // opened sub-navigation will close when it's sibling sub-navigation will be opened
+            breakpoint: options ? options.breakpoint : 992, // opened sub-navigation will close when it's sibling sub-navigation will be opened
         };
         this.initialized = false;
         this.mainUl = null;
@@ -125,10 +137,9 @@ class Subtly {
         setTimeout(() => {
             if (this.windowChanged === true) return false;
             const windowWidth = Subtly.getWindowWidth();
-            if (windowWidth > 1022 && this.previousWindowWidth <= 1022) this.off();
-            if (windowWidth <= 1022 && (this.previousWindowWidth > 1022 || !this.windowWidth)) {
-                if (!this.initialized) this.initialize();
-                else this.on();
+            if (windowWidth > this.config.breakpoint && this.previousWindowWidth <= this.config.breakpoint) this.off();
+            if (windowWidth <= this.config.breakpoint && (this.previousWindowWidth > this.config.breakpoint || !this.windowWidth)) {
+                this.on();
             }
             this.previousWindowWidth = windowWidth;
             this.windowChanged = true;
@@ -165,15 +176,10 @@ class Subtly {
         this.mainUl = document.querySelector(`${this.config.mainNav}`);
         this.childrenUls = document.querySelectorAll(`${this.config.mainNav} ul`);
         this.fillArrayOfLiElementsContainingUl();
-        if (Subtly.getWindowWidth() < 1022) this.on();
+        if (Subtly.getWindowWidth() < this.config.breakpoint) this.on();
         this.desktopTouchOn();
         window.addEventListener('resize', this.onWindowChange, false);
         window.addEventListener('orientationchange', this.onWindowChange, false);
-    }
-
-    initialize() {
-        this.on();
-        this.initialized = true;
     }
 
     // large screens touch behaviour
@@ -220,7 +226,7 @@ class Subtly {
             li.removeEventListener('touchstart', this.onItemTouchDekstop);
         });
 
-        // close subavs if clicked anywhere outside of nav
+        // remove closing subnavs if clicked anywhere outside of nav
         document.querySelector('body')
             .removeEventListener('touchstart', this.onOutsideNavTouch);
     }
