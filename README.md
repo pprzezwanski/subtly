@@ -2,9 +2,7 @@
 
 Complete self-controlling solution for mobile version of navigation based on unordered lists that can have as much levels of sub-navigation as needed. Subtly will automatically self-disable and relaunch when the screen size changes based on the breakpoint set in options. It also sets touch behaviour for desktop version of navigation (which is enabled when mobile nav behaviour is disabled)
 
-#Setup
-
-## Install
+## Setup
 1. Add subtly.js script to scripts folder (soon it will be availble as npm package)
 2. Subtly is an es6 class, so: include it in main js file and call it, for example:
 ```
@@ -13,9 +11,7 @@ const subtly = new Subtly();
 ```
 
 2. Add subtly.scss to your sass folder or rename it add subtly.css and add to css folder.
-3. 
-
-Add [data-subtly] attribute to main ul element.
+3. Add [data-subtly] attribute to main ul element.
 
 Rules for html: the script assumes that there is unorderd list 'ul' that has children 'li'. Each li has 'a' element as a child and if there is a sub-list 'ul' it is placed after 'a' element. Then this has the same rules. 
 
