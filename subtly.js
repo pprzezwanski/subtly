@@ -4,21 +4,21 @@
  * Subtly.js v1.1.0
  * (c) 2019 Paweł Przezwański <pprzezwanski@gmail.com>
  * Released under the MIT License.
- * Repository: https://github.com/pprzezwanski/subtly.js/
+ * Repository and instructions: https://github.com/pprzezwanski/subtly.js/
  */
 
 /**
- * Complete self-controlling solution for mobile version of navigation based on unordered lists that can have as much levels of sub-navigation as needed. Subtly will automatically self-disable and relaunch when the screen size changes besed on the breakpoint set in options. It also sets touch behaviour for desktop version of navigation (when mobile nav is disabled)
  * @param {object} options - object with options (more on https://github.com/pprzezwanski/subtly.js/)
  */
+
 class Subtly {
     constructor(options) {
         this.config = { // no dots in class names
-            mainNav: options ? options.mainNav : '[data-subtly]', // class name for main list element
-            hasSubNav: options ? options.hasSubNav : 'has-sub', // class name for styling when list element has sub list
-            isOpened: options ? options.isOpened : 'is-opened', // class name for styling when list is opened
-            autoClose: options ? options.autoClose : true, // opened sub-navigation will close when it's sibling sub-navigation will be opened
-            breakpoint: options ? options.breakpoint : 992, // opened sub-navigation will close when it's sibling sub-navigation will be opened
+            mainNav: options && options.mainNav ? options.mainNav : '[data-subtly]', // class name for main list element
+            hasSubNav: options && options.hasSubNav ? options.hasSubNav : 'has-sub', // class name for styling when list element has sub list
+            isOpened: options && options.isOpened ? options.isOpened : 'is-opened', // class name for styling when list is opened
+            autoClose: options && options.autoClose ? options.autoClose : true, // opened sub-navigation will close when it's sibling sub-navigation will be opened
+            breakpoint: options && options.breakpoint ? options.breakpoint : 992, // opened sub-navigation will close when it's sibling sub-navigation will be opened
         };
         this.initialized = false;
         this.mainUl = null;
@@ -35,7 +35,7 @@ class Subtly {
         this.prevented = true;
         this.previous = null;
 
-
+        // auto-init Subtly
         this.init();
     }
 
@@ -137,9 +137,13 @@ class Subtly {
         setTimeout(() => {
             if (this.windowChanged === true) return false;
             const windowWidth = Subtly.getWindowWidth();
-            if (windowWidth > this.config.breakpoint && this.previousWindowWidth <= this.config.breakpoint) this.off();
+            if (windowWidth > this.config.breakpoint && this.previousWindowWidth <= this.config.breakpoint) {
+                this.off();
+                this.desktopTouchOn();
+            }
             if (windowWidth <= this.config.breakpoint && (this.previousWindowWidth > this.config.breakpoint || !this.windowWidth)) {
                 this.on();
+                this.desktopTouchOff();
             }
             this.previousWindowWidth = windowWidth;
             this.windowChanged = true;
