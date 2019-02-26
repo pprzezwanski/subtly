@@ -1,4 +1,4 @@
-# subtly
+# subtly.js
 
 Complete self-controlling solution for mobile version of navigation based on unordered lists that can have as much levels of sub-navigation as needed. Subtly will automatically self-disable and relaunch when the screen size changes based on the breakpoint set in options. It also sets touch behaviour for desktop version of navigation (which is enabled when mobile nav behaviour is disabled)
 
@@ -9,9 +9,8 @@ Complete self-controlling solution for mobile version of navigation based on uno
 import Subtly from './modules/libs/subtly';
 const subtly = new Subtly();
 ```
-
-2. Add subtly.scss to your sass folder or rename it add subtly.css and add to css folder.
-3. Add [data-subtly] attribute to main ul element.
+3. Add subtly.scss to your sass folder or rename it to subtly.css and add to css vendor folder.
+4. Add 'data-subtly' attribute to main ul element.
 
 Rules for html: the script assumes that there is unorderd list 'ul' that has children 'li'. Each li has 'a' element as a child and if there is a sub-list 'ul' it is placed after 'a' element. Then this has the same rules. 
 
@@ -24,30 +23,43 @@ Example in pug:
 <pre>
 ul(data-subtly)
     li
-        a smth1
+        a dog
     li
-        a smth2
+        a cat
         ul
             li 
-                a smth3-in-smth2
+                a dark cat
                 ul
                     li
-                        a smth6-in-smth3-in-smth2
+                        a black cat
                     li
-                        a smth7-in-smth3-in-smth2
+                        a gray cat
                         ul
                             li
-                                a smth9-in-smth7-in-smth3-in-smth2
+                                a blue-gray cat cat
                             li
-                                a smth10-in-smth7-in-smth3-in-smth2
+                                a ginger-gray cat
                     li
-                        a smth8-in-smth3-in-smth2
+                        a dark-bule cat
             li
-                a smth4-in-smth2
+                a github's cat
             li
-                a smth5-in-smth2
-
+                a pink cat
+    li
+        a pig
+    li
+        a monkey
 
 </pre>
 
 
+## Options
+
+Options is an object that may overwrite default settings.
+
+* autoClose [boolean]: enables auto-closing previously opened li when another li is being opened | default: true,
+* breakpoint [integer]: breakpoint for enbaling and disabling mobile behaviour (in pixels) | default: 992,
+* mainNav [string]: a selector for main ul element | default: '[data-subtly]',
+* hasSubNav [string]: a css class name for styling li when it contains child | default: 'has-sub',
+* isOpened [string]: a css class name for styling li when it's child ul is opened | default: 'is-opened',
+            
