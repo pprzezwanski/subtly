@@ -1,100 +1,225 @@
+$subtly-padding: 1.8rem;
+$subtly-indent: 0.4rem;
+$subtly-underline-space: .3em;
+$subtly-transition-duration: .5s;
+$subtly-transition-timing: cubic-bezier(.2,0,.2,1);
+
+$subtly-color-background: transparent;
+$subtly-color-borders: linear-gradient(90deg, transparent, #4e74fb 20%, #a00210 80%, transparent);
+$subtly-color-sub-borders: linear-gradient(90deg, transparent 10%, #9ea1ba 60%, transparent);
+$subtly-color-text: black;
+$subtly-color-highlight: #7999fb;
+$subtly-color-indent-line: linear-gradient(#7999fb, #440faa, #7999fb 90%, transparent); 
+$subtly-color-arrow: #7999fb;
+$subtly-color-accent: #f01241;
+$subtly-color-arrow-opened: linear-gradient(45deg, $subtly-color-arrow, $subtly-color-accent);
+
+
 [data-subtly] {
 	margin: 0;
-  	padding: 0;
-  	list-style: none;
+  padding: 0;
+  list-style: none;
 	width: 100%;
-	padding: 1rem 2rem 2rem;
-	box-shadow: 0 .1rem 5rem 0 rgba(black, 0.8);
-	background-color: white;
-	color: teal;
-	
+	background-color: $subtly-color-background;
+	color: $subtly-color-text;
+
+	li {
+		padding-left: $subtly-indent; 
+
+		& > a {
+			padding: $subtly-padding 0;
+
+			&:active {
+				border: none;
+				outline: none;
+				box-shadow: none;
+			}
+		}
+	}
+
 	& > li {
-		border-top: 1px solid gray;
-		padding: 1.8rem 0;
 		position: relative;
-	
-		&:first-child {
-			border-top: none;
+
+		&:not(:last-child):after {
+			content: '';
+			position: absolute;
+			left: -5%;
+			right: -5%;
+			bottom: 0;
+			height: 1px;
+			background-image: $subtly-color-borders;
+			transform-origin: 0;
+			animation: line-grow $subtly-transition-duration $subtly-transition-timing;
 		}
 	}
 	
 	a {
 		font-size: 1.8rem;
 		color: currentColor;
+
+		&.has-href {
+			color: $subtly-color-highlight;
+		}
+	}
+
+	li > a {
+		display: block;
+
+		&:hover {
+			background-image: linear-gradient(180deg, transparent 25%, rgba(255, 255, 255, 0.05) 66%, rgba(255, 255, 255, 0.1))
+		}
 	}
 	
 	& > li ul {
 		margin: 0;
 		padding: 0;
 		list-style: none;
-		padding-left: 1rem;
+		padding-left: $subtly-indent;
 		overflow: hidden;
-		transition: all .3s ease;
+		transition: max-height $subtly-transition-duration $subtly-transition-timing;
 	
 		li {
-			padding-top: 1.7rem;
-	
-			& > ul {
-				transition: all .3s ease;
-			} 	
+			& > a {
+				display: flex;
+				padding: $subtly-padding 0;
+			}
+
+			&:first-child { margin-top: .8rem; }
+
+			& > ul { transition: all .3s ease; } 	
 		}
+	}
+
+	li:not(.has-sub) > a {
+		padding-left: $subtly-indent;
+		margin-left: -$subtly-indent;
 	}
 	
 	.has-sub {
+		padding-bottom: calc(#{$subtly-padding} - #{$subtly-underline-space});
+
 		& > a {
 			position: relative;
 			display: block;
 			padding-right: 4rem;
-			color: black;
 	
-			&::after {
+			&:before, &:after {
 				content: '';
 				position: absolute;
-				top: 0%;
+				top: 50%;
 				right: 3%;
 				display: block;
-				width: 1rem;
-				height: 1rem;
-				border-left: 1px solid black;
-				border-bottom: 1px solid black;
-				transform: rotate(-45deg);
-				transfrom-origin: 50%;
-				transition: all .3s ease;
+				width: .66em;
+				height: .66em;
+				transform: translateY(-75%) rotate(-45deg);
+				transform-origin: 50%;
+				transition: transform $subtly-transition-duration $subtly-transition-timing;
+				border: 2px solid transparent;
+			}
+
+			&:before {
+				border-left-color: $subtly-color-highlight;
+			}
+
+			&:after {
+				border-bottom-color: $subtly-color-highlight;
+			}
+
+			& ~ ul {
+				margin-top: calc(-#{$subtly-padding} + #{$subtly-underline-space});
+				position: relative;
+
+				&:before {
+					content: '';
+					position: absolute;
+					left: 0;
+					top: 0;
+					height: 100%;
+					width: 1px;
+					background: $subtly-color-indent-line;
+					transform-origin: 0 0;
+					transition: transform 2 * $subtly-transition-duration $subtly-transition-timing;
+					transform: scale(0);
+				}
+
+				& > li:not(:last-child) {
+					position: relative;
+
+					&:after {
+						content: '';
+						position: absolute;
+						left: 0;
+						right: 0;
+						bottom: 0;
+						height: 1px;
+						background: $subtly-color-sub-borders;
+						transform-origin: 0;
+						opacity: .66;
+						transition: transform 2 * $subtly-transition-duration $subtly-transition-timing;
+						transform: scale(0);
+					}
+				}
 			}
 		}
-	
+
 		& > a > a {
 			position: relative;
 			display: inline;
-			// box-decoration-break: clone;
 	
 			&:before {
 				content: '';
 				position: absolute;
 				left: 0;
-				right: 100%;
-				bottom: -3%;
-				height: 2px;
+				right: 0;
+				bottom: -$subtly-underline-space;
+				height: 1px;
 				background: currentColor;
 				transform-origin: 0;
-				transition: all .2s ease;
+				transition: transform $subtly-transition-duration $subtly-transition-timing;
+				transform: scale(0);
 			}
 		}
-		
+
+		&.is-animated {
+			& > a {
+				&:before, &:after {
+					animation: line-grow .3s both;
+				}
+	
+				&:after {
+					animation-delay: .3s;
+				}
+			}
+		}
 	
 		&.is-opened {
-			& > a::after {
-				top: 27%;
-				transform: rotate(135deg);
+			& > a {
+				&:before, &:after { 
+					transform: translateY(-20%) rotate(135deg);
+				}
+
+				&:before { border-left-color: $subtly-color-accent }
+				&:after { border-bottom-color: $subtly-color-accent }
+
+				& ~ ul {
+					&:before { transform: scale(1); }
+
+					& > li:after { transform: scale(1); }
+				} 
 			}
-	
-			& > a > a::before {
-				right: 0;
-			}
-	
+
 			& > a > a {
-				color: teal;
+				&:before { 
+					transform: scale(1); 
+					background-color: $subtly-color-highlight
+				}
 			}
 		}
 	}
+}
+
+@keyframes line-grow {
+	0% { transform: translateY(-50%) rotate(-45deg) scale(0); }
+
+	100% { transform: translateY(-50%) rotate(-45deg) scale(1); }
 }
